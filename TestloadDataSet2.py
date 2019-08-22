@@ -11,7 +11,7 @@ np.set_printoptions(threshold=sys.maxsize)
 datagen = tf.keras.preprocessing.image.ImageDataGenerator(rescale=1.0/255.0)
 
 train = datagen.flow_from_directory(
-    directory='testdir/fold1/Train',
+    directory='../testdir/fold1/Train',
     color_mode='grayscale',
     # class_mode='binary',
     target_size=(60, 60),
@@ -19,14 +19,14 @@ train = datagen.flow_from_directory(
 )
 
 validation_train = datagen.flow_from_directory(
-    directory='testdir/fold1/Validation',
+    directory='../testdir/fold1/Validation',
     color_mode='grayscale',
     target_size=(60, 60),
     shuffle=True,
 )
 
 test_set = datagen.flow_from_directory(
-    directory='testdir/fold1/Test',
+    directory='../testdir/fold1/Test',
     color_mode='grayscale',
     target_size=(60, 60),
     shuffle=True,
@@ -40,15 +40,15 @@ def conv2D(epoch):
     # model.add(tf.keras.layers.Dense(256, activation='relu'))
     model.add(tf.keras.layers.Conv2D(10, (10, 10), activation='relu', input_shape=(60, 60, 1)))
 
-    # model.add(tf.keras.layers.Dropout(0.2))
+    model.add(tf.keras.layers.Dropout(0.2))
 
     model.add(tf.keras.layers.Conv2D(10, (5, 5), activation='relu'))
 
-    # model.add(tf.keras.layers.Dropout(0.5))
+    model.add(tf.keras.layers.Dropout(0.5))
 
     model.add(tf.keras.layers.Conv2D(5, (3, 3), activation='relu'))
 
-    model.add(tf.keras.layers.Dropout(0.4))
+    model.add(tf.keras.layers.Dropout(0.2))
 
     model.add(tf.keras.layers.Flatten())
 
@@ -94,7 +94,6 @@ def plot_confusion_matrix(y_true, y_pred, classes, normalize=False, title=None, 
     This function prints and plots the confusion matrix.
     Normalization can be applied by setting `normalize=True`.
     """
-    y_true = y_true.classes
     if not title:
         if normalize:
             title = 'Normalized confusion matrix'
@@ -141,37 +140,38 @@ def plot_confusion_matrix(y_true, y_pred, classes, normalize=False, title=None, 
     return ax
 
 # history = fullyconnected(1000)
-history = conv2D(1)
+history = conv2D(1000)
 
 acctest = model.evaluate_generator(test_set)
 
-model.save('../Model/model16-convolution2d.hdf5')
+model.save('../../Model/model18-convolution2d.hdf5')
 
 print("Test acc = ", acctest)
 
 # print(history.history.keys())
 # print(history.history['val_acc'])
 
-# plt.plot(history.history['acc'])
-# plt.ylabel('accuracy')
-# plt.xlabel('epoch')
+plt.plot(history.history['acc'])
+plt.ylabel('accuracy')
+plt.xlabel('epoch')
 # plt.show()
 
-# plt.plot(history.history['val_acc'])
-# plt.ylabel('val_acc')
-# plt.xlabel('epoch')
+plt.plot(history.history['val_acc'])
+plt.ylabel('val_acc')
+plt.xlabel('epoch')
 # plt.show()
 
-y_pred = model.predict_generator(test_set, 55)
-# y_pred = np.argmax(y_pred, axis=1)
-print('Confusion Matrix')
-# print(confusion_matrix(test_set.classes, y_pred))
-plot_confusion_matrix(test_set, y_pred, classes=test_set[0][1])
-# print(len(y_pred))
-# print(len(test_set[0][1]))
+y_pred = model.predict_generator(test_set)
+y_pred = np.argmax(y_pred, axis=1)
+
+cm = confusion_matrix(test_set.classes, y_pred)
+
+fig, ax = plt.subplots()
+im = ax.imshow(cm, interpolation='nearest', cmap=plt.cm.Blues)
+ax.figure.colorbar(im, ax=ax)
+ax.set(xticks=np.arange(cm.shape[1]),
+           yticks=np.arange(cm.shape[0]),
+           ylabel='True label',
+           xlabel='Predicted label')
+
 plt.show()
-# print('Classification Report')
-# target_class = []
-# for i in range(70):
-#     target_class.append(str(i+1))
-# print(classification_report(test_set.classes, y_pred, target_names=target_class))
